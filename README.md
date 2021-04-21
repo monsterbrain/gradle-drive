@@ -29,7 +29,7 @@ To use this plugin you have to create a service account and generate private .p1
 Just click `create service account` button, check `Furnish a new private key` and select P12 option. 
 Save generated *p12 key file* and *service account email address* we will use them later on.
 
-### Drive Folder
+### Give Drive Folder Access to the service account
 
 Google doesn't allow you to access Drive folders for your service account directly, but there is some workaround. 
 You can create folder in your account's Drive and share access to service account email. 
@@ -44,12 +44,20 @@ Add it to your buildscript dependencies: ***(Artifactory not working yet! For te
 buildscript {
 
     repositories {
-        mavenCentral()
+        // using github packages
+        maven {
+            name = "GithubPackages"
+            url = uri("https://maven.pkg.github.com/monsterbrain/gradle-drive")
+            credentials {
+                username = "monsterbrain"
+                password = "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"
+            }
+        }
     }
 
     dependencies {
     	// ...
-        classpath 'com.github.ximik3.gradle:drive:1.0'
+        classpath 'com.github.ximik:drive:1.1'
     }
 }
 ```
@@ -69,45 +77,14 @@ Make sure to set a valid `signingConfig` for the release build type. Otherwise, 
 
 In case you are using product flavors you will get one of the above tasks for every flavor. E.g. `uploadApkQaRelease` or `uploadProductionRelease`.
 
-***Temporary artifactory solution!***
-
-Clone plugin project locally:
-
-```bash
-> git clone git@github.com:ximik3/gradle-drive.git
-```
-
-Upload archives to local maven repo (`repo` by default (see [build.gradle](build.gradle))):
-
-```bash
-> cd gradle-drive
-> ./gradlew uploadArchives
-```
-
-Add local repository to your top level `build.gradle`:
-
-```groovy
-buildscript {
-
-    repositories {
-        mavenCentral()
-        maven { url uri('path-to-repo-e.g.../gradle-drive/repo') }
-    }
-
-    dependencies {
-    	// ...
-        classpath 'com.github.ximik3.gradle:drive:1.0'
-    }
-}
-```
-
 ## Configuration
 
 Once you have applied this plugin to your android application project you can configure it via the ```drive``` block.
 
 ### Credentials
 
-Drop in your service account email address and the p12 key file you generated in the API Console here.
+Drop in your service account email address and the p12 key file **(key.p12 file should be in app folder)** you generated in the API Console here.
+folderId will be last part of google drive link (drive.google.com/drive/folders/**folderId**)
 
 ```groovy
 drive {
@@ -118,6 +95,16 @@ drive {
 ```
 
 ## Advanced Topics
+
+### Run Upload after Assemble apk
+For automatically running upload task after assemble Task you can configure it like this
+```
+afterEvaluate {
+    assembleRelease.configure {
+        finalizedBy uploadApkRelease
+    }
+}
+```
 
 ### Assemble apk before uploading
 
